@@ -4,24 +4,62 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Spotify Song Guessing Game</title>
+    <link rel="stylesheet" href="/static/style.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <h1>Welcome to the Spotify Song Guessing Game!</h1>
-    <button id="playBtn">Play a random song from your top 100 songs</button>
+    <button id="playBtn">Start playing songs from your library</button>
     <div id="guessDiv" style="display: none">
-      <p>Now playing... Guess the name of the song!</p>
+      <p>Guess the name of the song:</p>
       <input type="text" id="guessInput" placeholder="Enter your guess" />
       <button id="submitGuess">Submit Guess</button>
+      <button id="skipBtn">Next Song</button>
+      <button id="hintBtn">Hint: Show Artist</button>
+      <p id="hint" style="display: none"></p>
       <p id="result"></p>
+      <p id="score">Score: 0</p>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="any"
+        value="0"
+        id="progressBar"
+      />
     </div>
 
     <script>
-      $("#playBtn").click(function () {
-        $.post("/play", function () {
-          $("#playBtn").hide();
-          $("#guessDiv").show();
+      let score = 0;
+      let startTime;
+      const updateScore = (newScore) => {
+        score = newScore;
+        $("#score").text(`Score: ${score}`);
+      };
+
+      const playSong = () => {
+        $.post("/play", function (song) {
+          startTime = new Date();
+          $("#hint").hide();
+          $("#result").text("");
+          $("#submitGuess").prop("disabled", false);
+          $("#guessInput").val("");
+          $("#hint").text(`Artist(s): ${song.artists}`);
         });
+      };
+
+      $("#playBtn").click(function () {
+        playSong();
+        $("#playBtn").hide();
+        $("#guessDiv").show();
+      });
+
+      $("#skipBtn").click(function () {
+        playSong();
+      });
+
+      $("#hintBtn").click(function () {
+        $("#hint").show();
       });
 
       $("#submitGuess").click(function () {
@@ -29,14 +67,40 @@
         $.post("/check_guess", { guess: guess }, function (result) {
           if (result.is_correct) {
             $("#result").text(
-              `Congratulations! You're close enough. The song is '${result.song_name}' by ${result.artists}`
+              `Congratulations! The song is '${result.song_name}' by ${result.artists}`
             );
             $("#submitGuess").prop("disabled", true);
+            const elapsedTime = (new Date() - startTime) / 1000;
+            const points = Math.max(100 - elapsedTime, 0);
+            updateScore(score + points);
           } else {
             $("#result").text("Incorrect! Try again.");
           }
         });
       });
+
+      const updatePlaybackState = () => {
+        $.get("/playback_state", function (playback) {
+          if (!playback.error) {
+            const progress = playback.position_ms / playback.duration_ms;
+            $("#progressBar").prop("max", playback.duration_ms);
+            $("#progressBar").prop("value", playback.position_ms);
+          }
+        });
+      };
+
+      const seek = (position_ms) => {
+        $.post("/seek", { position_ms: position_ms }, function () {
+          updatePlaybackState();
+        });
+      };
+
+      $("#progressBar").on("change", function () {
+        const position_ms = $(this).val();
+        seek(position_ms);
+      });
+
+      setInterval(updatePlaybackState, 1000);
     </script>
   </body>
 </html>
