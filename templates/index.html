@@ -9,7 +9,9 @@
   </head>
   <body>
     <h1>Welcome to the Spotify Song Guessing Game!</h1>
-    <button id="playBtn">Start playing songs from your library</button>
+    <div id="buttonContainer">
+      <button id="playBtn">Start playing songs from your library</button>
+    </div>
     <div id="guessDiv" style="display: none">
       <p>Guess the name of the song:</p>
       <input type="text" id="guessInput" placeholder="Enter your guess" />
@@ -98,6 +100,14 @@
       $("#progressBar").on("change", function () {
         const position_ms = $(this).val();
         seek(position_ms);
+      });
+
+      $("#guessInput").on("keypress", function (e) {
+        if (e.which === 13) {
+          // Enter key
+          e.preventDefault();
+          $("#submitGuess").click();
+        }
       });
 
       setInterval(updatePlaybackState, 1000);

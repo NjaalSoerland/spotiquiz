@@ -28,7 +28,7 @@ input[type="range"] {
 
 button {
   display: inline-block;
-  background-color: #4b6cb7;
+  background-color: #4bb774;
   color: white;
   text-align: center;
   border-radius: 4px;
@@ -39,7 +39,7 @@ button {
 }
 
 button:hover {
-  background-color: #3b5998;
+  background-color: #5bdf8e;
 }
 
 button:disabled {
@@ -60,4 +60,9 @@ p {
 
 #hint {
   font-style: italic;
+}
+
+#buttonContainer {
+  width: 100%;
+  text-align: center;
 }
