@@ -3,6 +3,7 @@ import random
 from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import jellyfish
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -11,7 +12,8 @@ load_dotenv()
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=os.environ['SPOTIPY_CLIENT_ID'],
                                                client_secret=os.environ['SPOTIPY_CLIENT_SECRET'],
                                                redirect_uri=os.environ['SPOTIPY_REDIRECT_URI'],
-                                               scope="user-modify-playback-state user-top-read"))
+                                               scope="user-modify-playback-state user-top-read user-read-playback-state"))
+
 
 
 def play_random_song(songs):
@@ -35,11 +37,16 @@ def main():
     song_name, artists = play_random_song(top_songs)
 
     print("Now playing... Guess the name of the song!")
+    
+    similarity_threshold = 0.85  # Adjust this value (0-1) to set the tolerance level for accepting guesses
+
     while True:
         guess = input("Enter your guess: ")
-        if guess.lower() == song_name.lower():
-            print(
-                f"Congratulations! You're right. The song is '{song_name}' by {', '.join(artists)}")
+        similarity = jellyfish.jaro_winkler(guess.lower(), song_name.lower())
+        print("Guess similarity:", similarity)
+
+        if similarity >= similarity_threshold:
+            print(f"Congratulations! You're close enough. The song is '{song_name}' by {', '.join(artists)}")
             break
         else:
             print("Incorrect! Try again.")
