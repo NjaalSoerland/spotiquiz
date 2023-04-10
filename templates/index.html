@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Song Guessing Game</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <h1>Welcome to the Spotify Song Guessing Game!</h1>
+    <button id="playBtn">Play a random song from your top 100 songs</button>
+    <div id="guessDiv" style="display: none">
+      <p>Now playing... Guess the name of the song!</p>
+      <input type="text" id="guessInput" placeholder="Enter your guess" />
+      <button id="submitGuess">Submit Guess</button>
+      <p id="result"></p>
+    </div>
+
+    <script>
+      $("#playBtn").click(function () {
+        $.post("/play", function () {
+          $("#playBtn").hide();
+          $("#guessDiv").show();
+        });
+      });
+
+      $("#submitGuess").click(function () {
+        const guess = $("#guessInput").val();
+        $.post("/check_guess", { guess: guess }, function (result) {
+          if (result.is_correct) {
+            $("#result").text(
+              `Congratulations! You're close enough. The song is '${result.song_name}' by ${result.artists}`
+            );
+            $("#submitGuess").prop("disabled", true);
+          } else {
+            $("#result").text("Incorrect! Try again.");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
